@@ -606,3 +606,53 @@ class MicroscopeStage(MicroscopeBase):
     def getHandlers(self) -> typing.List[PositionerHandler]:
         # Override MicroscopeBase.getHandlers.  Do not call super.
         return [x.getHandler() for x in self._axes]
+
+
+class MicroscopeModulator(MicroscopeBase):
+    """A light modulator with a sequence of parameters.
+
+    Sample config entry:
+      [slm]
+      type: MicroscopeModulator
+      uri: PYRO:HDMIslm@192.168.0.2:7001
+
+      ...
+    """
+    
+    def getHandlers(self):
+        executor = cockpit.handlers.deviceHandler.DeviceHandler(
+            self.name + ' modulator', # name
+            'modulator group', # group
+            { # callbacks
+                'examineActions': self.examineActions,
+                'executeTable': self.executeTable,
+                'getMovementTime': self.getMovementTime,
+            },
+            depot.EXECUTOR) # device type
+        self.handlers.append(executor)
+        return self.handlers
+
+    def examineActions(self):
+        pass
+    
+    def executeTable(self, table, startIndex, stopIndex, numReps, repDuration):
+        # Found a table entry with a simple index. Trigger until that index
+        # is reached.
+        for t, h, args in table[startIndex:stopIndex]:
+            events.publish(events.UPDATE_STATUS_LIGHT, 'device waiting',
+                           'SLM moving to index %d' % args)
+            self.cycleToPosition(args)
+
+    def getMovementTime(self):
+        pass
+
+    def finalizeInitialization(self):
+        # This should probably work the other way around:
+        # after init, the handlers should query for the current state,
+        # rather than the device pushing state info to the handlers as
+        # we currently do here.
+        ph = self.handlers[0] # powerhandler
+        ph.powerSetPoint = self._proxy.get_set_power()
+        # Set lightHandler to enabled if light source is on.
+        lh = self.handlers[-1]
+        lh.state = int(self._proxy.get_is_on())
