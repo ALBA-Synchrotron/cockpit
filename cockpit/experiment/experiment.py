@@ -153,8 +153,7 @@ class Experiment:
         # Ensure all handlers are experiment-eligible.
         for handler in self.allHandlers:
             if not handler.getIsEligibleForExperiments():
-                raise RuntimeError("Handler [%s] is not usable in experiments."
-                                   % handler.name)
+                self.allHandlers.remove(handler)
 
         ## Maps camera handlers to their minimum time between exposures.
         # Must be populated after exposure time has been set on camera.
