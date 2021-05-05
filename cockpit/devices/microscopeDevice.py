@@ -56,6 +56,7 @@ import cockpit.handlers.deviceHandler
 import cockpit.handlers.filterHandler
 import cockpit.handlers.lightPower
 import cockpit.handlers.lightSource
+import cockpit.handlers.executor
 import cockpit.util.colors
 import cockpit.util.userConfig
 import cockpit.util.threads
@@ -588,26 +589,32 @@ class MicroscopeModulator(MicroscopeBase):
 
       ...
     """
-    
+
     def getHandlers(self):
-        dt = self.config.get("settlingtime", 10)
-        executor = cockpit.handlers.deviceHandler.DeviceHandler(
-            self.name + " modulator",  # name
-            "modulator group",  # group
-            True,
-            {  # callbacks
-                "examineActions": self.examineActions,
-                "executeTable": self.executeTable,
-                "getMovementTime": lambda *args: dt,
+        dt = self.config.get('settlingtime', 10)
+        executor = cockpit.handlers.executor.AnalogExecutorHandler(
+            self.name + ' modulator', # name
+            'modulator group', # group
+            { # callbacks
+                'examineActions': lambda *args: None,
+                'executeTable': self.executeTable,
+                'getMovementTime': lambda *args: dt,
+                'getAnalog': self.getAnalog,
+                'setAnalog': self.setAnalog,
             },
-            depot.EXECUTOR,  # device type
-        )
+            alines=3) # device type
         self.handlers.append(executor)
         return self.handlers
 
-    def examineActions(self):
+    def getAnalog(self):
+        return None
+
+    def setAnalog(self, *args):
         pass
-    
+
+    def examineActions(self, actions):
+        return
+
     def executeTable(self, table, startIndex, stopIndex, numReps, repDuration):
         # Found a table entry with a simple index. Trigger until that index
         # is reached.
