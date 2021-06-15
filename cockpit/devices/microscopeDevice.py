@@ -45,12 +45,15 @@ For connection via a controller::
 """
 
 import typing
+import time
 
 import Pyro4
 import wx
 from cockpit import events
-from cockpit.devices import device
 from cockpit import depot
+from cockpit.devices import device
+from cockpit.experiment import actionTable
+from cockpit.devices.executorDevices import actions_from_table
 import cockpit.gui.device
 import cockpit.handlers.deviceHandler
 import cockpit.handlers.filterHandler
@@ -60,6 +63,7 @@ import cockpit.handlers.executor
 import cockpit.util.colors
 import cockpit.util.userConfig
 import cockpit.util.threads
+from cockpit.util.logger import log
 from cockpit.gui.device import SettingsEditor
 from cockpit.handlers.stagePositioner import PositionerHandler
 from cockpit.interfaces import stageMover
@@ -91,6 +95,7 @@ class MicroscopeBase(device.Device):
 
     def initialize(self):
         super().initialize()
+        log.debug("%s -> initialize" % self.name)
         # Connect to the proxy.
         if 'controller' not in self.config:
             self._proxy = Pyro4.Proxy(self.uri)
@@ -174,6 +179,7 @@ class MicroscopeBase(device.Device):
 
 
     def showSettings(self, evt):
+        log.debug("%s -> showSettings" % self.name)
         if not self.settings_editor:
             # TODO - there's a problem with abstraction here. The settings
             # editor needs the describe/get/set settings functions from the
@@ -579,6 +585,16 @@ class MicroscopeStage(MicroscopeBase):
         return [x.getHandler() for x in self._axes]
 
 
+def att_get(att):
+    return lambda obj: getattr(obj._proxy, att)
+
+def att_set(att):
+    return lambda obj, value: obj._proxy.__setattr__(att, value)
+
+def att_del(att):
+    return lambda obj: obj._proxy.__delattr__(att)
+
+
 class MicroscopeModulator(MicroscopeBase):
     """A light modulator with a sequence of parameters.
 
@@ -596,32 +612,39 @@ class MicroscopeModulator(MicroscopeBase):
             self.name + ' modulator', # name
             'modulator group', # group
             { # callbacks
-                'examineActions': lambda *args: None,
-                'executeTable': self.executeTable,
+                'examineActions': self.examineActions,
+                'executeTable': self.executeActions,
                 'getMovementTime': lambda *args: dt,
-                'getAnalog': self.getAnalog,
-                'setAnalog': self.setAnalog,
+                'getAnalog': lambda ipar: self.position,
+                'setAnalog': lambda ipar, value: self.__setattr__("position", value)
             },
-            alines=3) # device type
+            alines=1) # device type
+        executor.registerAnalog(self, 0)
         self.handlers.append(executor)
         return self.handlers
 
-    def getAnalog(self):
-        return None
-
-    def setAnalog(self, *args):
-        pass
-
     def examineActions(self, actions):
+        self.time = time.time()
+        print("examineActions %s" % str(actions))
         return
 
-    def executeTable(self, table, startIndex, stopIndex, numReps, repDuration):
+    def executeActions(self, action_list, startIndex, stopIndex, numReps, repDuration):
         # Found a table entry with a simple index. Trigger until that index
         # is reached.
-        for t, h, args in table[startIndex:stopIndex]:
-            events.publish(events.UPDATE_STATUS_LIGHT, 'device waiting',
-                           'SLM moving to index %d' % args)
-            self.cycleToPosition(args)
+        print("executeActions %d-%d" % (startIndex, stopIndex))
+        for action in action_list:
+            wait = self.time + float(action[0]) - time.time()
+            if wait > 0:
+                # Cockpit use ms
+                print(f"Sleep {wait}ms")
+                time.sleep(wait/1000.0)
+            print("action", str(action))
+            t, state = action
+            dstate, astate = state
+            print(str(astate))
+            self.position = astate[0]
+
+        events.publish(events.EXPERIMENT_EXECUTION)
 
     def finalizeInitialization(self):
         # This should probably work the other way around:
@@ -633,3 +656,19 @@ class MicroscopeModulator(MicroscopeBase):
         # Set lightHandler to enabled if light source is on.
         lh = self.handlers[-1]
         lh.state = int(self._proxy.get_is_on())
+
+    def set_sequence(self, seq):
+        self._proxy.set_sequence(seq)
+
+    position = property(att_get('position'), att_set('position'),
+                        att_del('position'), f"position property")
+
+    angle = property(att_get('angle'), att_set('angle'), att_del('angle'),
+                     f"angle property")
+
+    phase = property(att_get('phase'), att_set('phase'), att_del('phase'),
+                     f"phase property")
+
+    wavelength = property(att_get('wavelength'), att_set('wavelength'),
+                          att_del('wavelength'), f"wavelength property")
+
