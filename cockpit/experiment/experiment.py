@@ -60,6 +60,7 @@ import cockpit.handlers.camera
 import cockpit.interfaces.stageMover
 import cockpit.util.logger
 
+from functools import partial
 import decimal
 import gc
 import os
@@ -374,8 +375,11 @@ class Experiment:
                     # No executor can run this line. See if we can fall back to software.
                     fn = None
                     t, h, action = self.table[curIndex]
-                    if h.deviceType == depot.CAMERA and 'softTrigger' in h.callbacks:
-                        fn = lambda: h.callbacks['softTrigger']()
+                    if h.deviceType == depot.CAMERA and "softTrigger" in h.callbacks:
+                        fn = lambda: h.callbacks["softTrigger"]()
+                    elif (h.deviceType == depot.LIGHT_TOGGLE
+                          and "writeDigital" in h.callbacks):
+                        fn = partial(h.callbacks["writeDigital"], action)
                     elif h.deviceType == depot.STAGE_POSITIONER:
                         fn = lambda: h.moveAbsolute(action)
 
