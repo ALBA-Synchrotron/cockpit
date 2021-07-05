@@ -625,20 +625,19 @@ class MicroscopeModulator(MicroscopeBase):
 
     def examineActions(self, actions):
         self.time = time.time()
-        print("examineActions %s" % str(actions))
+        print("examineActions\n%s" % str(actions))
         return
 
     def executeActions(self, action_list, startIndex, stopIndex, numReps, repDuration):
         # Found a table entry with a simple index. Trigger until that index
         # is reached.
-        print("executeActions %d-%d" % (startIndex, stopIndex))
         for action in action_list:
-            wait = self.time + float(action[0]) - time.time()
+            wait = self.time + float(action[0]) / 1000.0 - time.time()
+            print("action", str(action), time.time())
             if wait > 0:
                 # Cockpit use ms
-                print(f"Sleep {wait}ms")
-                time.sleep(wait/1000.0)
-            print("action", str(action))
+                print(f"{self.name} sleep {wait}s")
+                time.sleep(wait)
             t, state = action
             dstate, astate = state
             print(str(astate))
