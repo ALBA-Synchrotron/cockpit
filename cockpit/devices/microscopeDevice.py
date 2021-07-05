@@ -313,6 +313,7 @@ class MicroscopeLaser(MicroscopeBase):
             self._proxy.disable()
 
     def getHandlers(self):
+        # Light Power Handler
         self.handlers.append(cockpit.handlers.lightPower.LightPowerHandler(
             self.name + ' power',  # name
             self.name + ' light source',  # groupName
@@ -323,26 +324,29 @@ class MicroscopeLaser(MicroscopeBase):
             self.config.get('wavelength', None),
             curPower=.2,
             isEnabled=True))
+        # Light Handler
         trigsource = self.config.get('triggersource', None)
         trigline = self.config.get('triggerline', None)
+        callbacks = {'setEnabled': lambda name, on: self._setEnabled(on),
+                     'setExposureTime': lambda name, value: setattr(self, '_exposureTime', value),
+                     'getExposureTime': lambda name: self._exposureTime}
         if trigsource:
             trighandler = depot.getHandler(trigsource, depot.EXECUTOR)
         else:
+            print("No trigger source. Using writeDigital instead")
             trighandler = None
+            callbacks['writeDigital'] = self._setEnabled
         self._exposureTime = 100
         self.handlers.append(cockpit.handlers.lightSource.LightHandler(
             self.name,
             self.name + ' light source',
-            {'setEnabled': lambda name, on: self._setEnabled(on),
-             'setExposureTime': lambda name, value: setattr(self, '_exposureTime', value),
-             'getExposureTime': lambda name: self._exposureTime},
+            callbacks,
             self.config.get('wavelength', None),
-            100,
+            self._exposureTime,
             trighandler,
             trigline))
 
         return self.handlers
-
 
     @cockpit.util.threads.callInNewThread
     def _setPower(self, power: float) -> None:
