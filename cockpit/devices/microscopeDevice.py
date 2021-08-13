@@ -607,25 +607,25 @@ class MicroscopeModulator(MicroscopeBase):
     """
 
     def getHandlers(self):
-        dt = self.config.get('settlingtime', 10)
+        dt = self.config.get("settlingtime", 10)
         executor = cockpit.handlers.executor.AnalogExecutorHandler(
-            self.name + ' modulator', # name
-            'modulator group', # group
-            { # callbacks
-                'examineActions': self.examineActions,
-                'executeTable': self.executeActions,
-                'getMovementTime': lambda *args: dt,
-                'getAnalog': lambda ipar: self.position,
-                'setAnalog': lambda ipar, value: self.__setattr__("position", value)
+            self.name + " modulator",  # name
+            "modulator group",  # group
+            {  # callbacks
+                "examineActions": self.examineActions,
+                "executeTable": self.executeActions,
+                "getMovementTime": lambda *args: dt,
+                "getAnalog": lambda ipar: self.position,
+                "setAnalog": lambda ipar, value: self.__setattr__("position", value),
             },
-            alines=1) # device type
+            alines=1,
+        )  # device type
         executor.registerAnalog(self, 0)
         self.handlers.append(executor)
         return self.handlers
 
     def examineActions(self, actions):
         self.time = time.time()
-        print("examineActions\n%s" % str(actions))
         return
 
     def executeActions(self, action_list, startIndex, stopIndex, numReps, repDuration):
@@ -633,14 +633,12 @@ class MicroscopeModulator(MicroscopeBase):
         # is reached.
         for action in action_list:
             wait = self.time + float(action[0]) / 1000.0 - time.time()
-            print("action", str(action), time.time())
             if wait > 0:
                 # Cockpit use ms
                 print(f"{self.name} sleep {wait}s")
                 time.sleep(wait)
             t, state = action
             dstate, astate = state
-            print(str(astate))
             self.position = astate[0]
 
         events.publish(events.EXPERIMENT_EXECUTION)
@@ -650,7 +648,7 @@ class MicroscopeModulator(MicroscopeBase):
         # after init, the handlers should query for the current state,
         # rather than the device pushing state info to the handlers as
         # we currently do here.
-        ph = self.handlers[0] # powerhandler
+        ph = self.handlers[0]  # powerhandler
         ph.powerSetPoint = self._proxy.get_set_power()
         # Set lightHandler to enabled if light source is on.
         lh = self.handlers[-1]
@@ -659,15 +657,24 @@ class MicroscopeModulator(MicroscopeBase):
     def set_sequence(self, seq):
         self._proxy.set_sequence(seq)
 
-    position = property(att_get('position'), att_set('position'),
-                        att_del('position'), f"position property")
+    position = property(
+        att_get("position"),
+        att_set("position"),
+        att_del("position"),
+        f"position property",
+    )
 
-    angle = property(att_get('angle'), att_set('angle'), att_del('angle'),
-                     f"angle property")
+    angle = property(
+        att_get("angle"), att_set("angle"), att_del("angle"), f"angle property"
+    )
 
-    phase = property(att_get('phase'), att_set('phase'), att_del('phase'),
-                     f"phase property")
+    phase = property(
+        att_get("phase"), att_set("phase"), att_del("phase"), f"phase property"
+    )
 
-    wavelength = property(att_get('wavelength'), att_set('wavelength'),
-                          att_del('wavelength'), f"wavelength property")
-
+    wavelength = property(
+        att_get("wavelength"),
+        att_set("wavelength"),
+        att_del("wavelength"),
+        f"wavelength property",
+    )
