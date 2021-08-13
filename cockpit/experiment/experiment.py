@@ -665,12 +665,17 @@ class Experiment:
             return 0
 
         nextUseTime = lastUseTime
-        if camera.getExposureMode() == cockpit.handlers.camera.TRIGGER_BEFORE:
+        if camera.getExposureMode() in [
+            cockpit.handlers.camera.TRIGGER_BEFORE,
+            cockpit.handlers.camera.TRIGGER_SOFT,
+        ]:
             # The camera actually finished exposing (and started reading
             # out) some time after lastUseTime, depending on its declared
             # exposure time.
-            nextUseTime += camera.getExposureTime(isExact = True)
-        nextUseTime += self.cameraToReadoutTime[camera] + decimal.Decimal(0.1)
+            exposure = camera.getExposureTime(isExact=True)
+            nextUseTime += camera.getExposureTime(isExact=True)
+        readout_time = self.cameraToReadoutTime[camera]
+        nextUseTime += readout_time
         return nextUseTime
 
     ## Return a calculated exposure time for the specified camera handler,
