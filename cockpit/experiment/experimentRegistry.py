@@ -64,6 +64,7 @@ from cockpit.experiment import zStack
 from cockpit.experiment import si2d
 from cockpit.experiment import rotatorSweep
 from cockpit.experiment import SIMFlux
+from cockpit.experiment import cryosim
 
 ## List of registered modules.
 registeredModules = [
@@ -77,6 +78,7 @@ registeredModules = [
     SIMFlux,
     si2d,
     rotatorSweep,
+    cryosim,
 ]
 
 
