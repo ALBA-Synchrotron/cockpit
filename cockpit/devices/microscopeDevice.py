@@ -45,20 +45,25 @@ For connection via a controller::
 """
 
 import typing
+import time
 
 import Pyro4
 import wx
 from cockpit import events
-from cockpit.devices import device
 from cockpit import depot
+from cockpit.devices import device
+from cockpit.experiment import actionTable
+from cockpit.devices.executorDevices import actions_from_table
 import cockpit.gui.device
 import cockpit.handlers.deviceHandler
 import cockpit.handlers.filterHandler
 import cockpit.handlers.lightPower
 import cockpit.handlers.lightSource
+import cockpit.handlers.executor
 import cockpit.util.colors
 import cockpit.util.userConfig
 import cockpit.util.threads
+from cockpit.util.logger import log
 from cockpit.gui.device import SettingsEditor
 from cockpit.handlers.stagePositioner import PositionerHandler
 from cockpit.interfaces import stageMover
@@ -90,6 +95,7 @@ class MicroscopeBase(device.Device):
 
     def initialize(self):
         super().initialize()
+        log.debug("%s -> initialize" % self.name)
         # Connect to the proxy.
         if 'controller' not in self.config:
             self._proxy = Pyro4.Proxy(self.uri)
@@ -173,6 +179,7 @@ class MicroscopeBase(device.Device):
 
 
     def showSettings(self, evt):
+        log.debug("%s -> showSettings" % self.name)
         if not self.settings_editor:
             # TODO - there's a problem with abstraction here. The settings
             # editor needs the describe/get/set settings functions from the
@@ -421,38 +428,40 @@ class _MicroscopeStageAxis:
         stage_name: the name of the stage device, used to construct
             the handler name.
     """
-    def __init__(self, axis, index: int, units_per_micron: float,
-                 stage_name: str) -> None:
+
+    def __init__(
+        self, axis, index: int, units_per_micron: float, stage_name: str, config
+    ) -> None:
         self._axis = axis
         self._units_per_micron = units_per_micron
         self._name = "%d %s" % (index, stage_name)
+        self.config = config
 
-        limits = AxisLimits(self._axis.limits.lower / self._units_per_micron,
-                            self._axis.limits.upper / self._units_per_micron)
+        limits = AxisLimits(
+            self._axis.limits.lower / self._units_per_micron,
+            self._axis.limits.upper / self._units_per_micron,
+        )
 
         group_name = "%d stage motion" % index
         eligible_for_experiments = False
         # TODO: to make it eligible for experiments, we need a
         # getMovementTime callback (see issue #614).
+        # WORKAROUND: set a fixed time from the configuration
+        dt = self.config.get("settlingtime", 10)
         callbacks = {
-            'getMovementTime' : self.getMovementTime,
-            'getPosition' : self.getPosition,
-            'moveAbsolute' : self.moveAbsolute,
-            'moveRelative' : self.moveRelative,
+            "getMovementTime": lambda *args: dt,
+            "getPosition": self.getPosition,
+            "moveAbsolute": self.moveAbsolute,
+            "moveRelative": self.moveRelative,
         }
 
-        self._handler = PositionerHandler(self._name, group_name,
-                                          eligible_for_experiments, callbacks,
-                                          index, limits)
+        self._handler = PositionerHandler(
+            self._name, group_name, eligible_for_experiments, callbacks, index, limits
+        )
 
     def getHandler(self) -> PositionerHandler:
         return self._handler
 
-    def getMovementTime(self, index: int, start: float, end: float) -> float:
-        # TODO: this is not implemented yet but it shouldn't be called
-        # anyway because we are not eligible for experiments.
-        del index
-        raise NotImplementedError('')
 
     def getPosition(self, index: int) -> float:
         """Get the position for the specified axis."""
@@ -548,8 +557,11 @@ class MicroscopeStage(MicroscopeBase):
 
             their_axis = their_axes_map[their_name]
             cockpit_index = stageMover.AXIS_MAP[one_letter_name]
-            self._axes.append(_MicroscopeStageAxis(their_axis, cockpit_index,
-                                                   units_per_micron, self.name))
+            self._axes.append(
+                _MicroscopeStageAxis(
+                    their_axis, cockpit_index, units_per_micron, self.name, self.config
+                )
+            )
             handled_axis_names.add(their_name)
 
         # Ensure that there isn't a non handled axis left behind.
@@ -571,3 +583,98 @@ class MicroscopeStage(MicroscopeBase):
     def getHandlers(self) -> typing.List[PositionerHandler]:
         # Override MicroscopeBase.getHandlers.  Do not call super.
         return [x.getHandler() for x in self._axes]
+
+
+def att_get(att):
+    return lambda obj: getattr(obj._proxy, att)
+
+def att_set(att):
+    return lambda obj, value: obj._proxy.__setattr__(att, value)
+
+def att_del(att):
+    return lambda obj: obj._proxy.__delattr__(att)
+
+
+class MicroscopeModulator(MicroscopeBase):
+    """A light modulator with a sequence of parameters.
+
+    Sample config entry:
+      [slm]
+      type: MicroscopeModulator
+      uri: PYRO:HDMIslm@192.168.0.2:7001
+
+      ...
+    """
+
+    def getHandlers(self):
+        dt = self.config.get("settlingtime", 10)
+        executor = cockpit.handlers.executor.AnalogExecutorHandler(
+            self.name + " modulator",  # name
+            "modulator group",  # group
+            {  # callbacks
+                "examineActions": self.examineActions,
+                "executeTable": self.executeActions,
+                "getMovementTime": lambda *args: dt,
+                "getAnalog": lambda ipar: self.position,
+                "setAnalog": lambda ipar, value: self.__setattr__("position", value),
+            },
+            alines=1,
+        )  # device type
+        executor.registerAnalog(self, 0)
+        self.handlers.append(executor)
+        return self.handlers
+
+    def examineActions(self, actions):
+        self.time = time.time()
+        return
+
+    def executeActions(self, action_list, startIndex, stopIndex, numReps, repDuration):
+        # Found a table entry with a simple index. Trigger until that index
+        # is reached.
+        for action in action_list:
+            wait = self.time + float(action[0]) / 1000.0 - time.time()
+            if wait > 0:
+                # Cockpit use ms
+                print(f"{self.name} sleep {wait}s")
+                time.sleep(wait)
+            t, state = action
+            dstate, astate = state
+            self.position = astate[0]
+
+        events.publish(events.EXPERIMENT_EXECUTION)
+
+    def finalizeInitialization(self):
+        # This should probably work the other way around:
+        # after init, the handlers should query for the current state,
+        # rather than the device pushing state info to the handlers as
+        # we currently do here.
+        ph = self.handlers[0]  # powerhandler
+        ph.powerSetPoint = self._proxy.get_set_power()
+        # Set lightHandler to enabled if light source is on.
+        lh = self.handlers[-1]
+        lh.state = int(self._proxy.get_is_on())
+
+    def set_sequence(self, seq):
+        self._proxy.set_sequence(seq)
+
+    position = property(
+        att_get("position"),
+        att_set("position"),
+        att_del("position"),
+        f"position property",
+    )
+
+    angle = property(
+        att_get("angle"), att_set("angle"), att_del("angle"), f"angle property"
+    )
+
+    phase = property(
+        att_get("phase"), att_set("phase"), att_del("phase"), f"phase property"
+    )
+
+    wavelength = property(
+        att_get("wavelength"),
+        att_set("wavelength"),
+        att_del("wavelength"),
+        f"wavelength property",
+    )
