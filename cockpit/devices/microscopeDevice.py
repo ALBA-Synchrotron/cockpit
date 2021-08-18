@@ -49,6 +49,7 @@ import time
 
 import Pyro4
 import wx
+from decimal import Decimal
 from cockpit import events
 from cockpit import depot
 from cockpit.devices import device
@@ -443,11 +444,10 @@ class _MicroscopeStageAxis:
         )
 
         group_name = "%d stage motion" % index
-        eligible_for_experiments = False
+        eligible_for_experiments = True
         # TODO: to make it eligible for experiments, we need a
         # getMovementTime callback (see issue #614).
-        # WORKAROUND: set a fixed time from the configuration
-        dt = self.config.get("settlingtime", 10)
+        # WORKAROUND: calculate from configuration parameters
         callbacks = {
             "getMovementTime": lambda *args: dt,
             "getPosition": self.getPosition,
@@ -459,9 +459,15 @@ class _MicroscopeStageAxis:
             self._name, group_name, eligible_for_experiments, callbacks, index, limits
         )
 
+    def getMovementTime(self, axis, start, end):
+        dt = float(self.config.get("settlingtime", 10)) # um
+        vel = float(self.config.get("velocity", 1000)) # um/s
+        if hasattr(self._axis, 'velocity'):
+            vel = self._axis.velocity
+        return (Decimal(abs(end - start) / vel), Decimal(dt))
+
     def getHandler(self) -> PositionerHandler:
         return self._handler
-
 
     def getPosition(self, index: int) -> float:
         """Get the position for the specified axis."""
