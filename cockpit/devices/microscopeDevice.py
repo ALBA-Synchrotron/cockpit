@@ -453,7 +453,7 @@ class _MicroscopeStageAxis:
         # getMovementTime callback (see issue #614).
         # WORKAROUND: calculate from configuration parameters
         callbacks = {
-            "getMovementTime": lambda *args: dt,
+            "getMovementTime": self.getMovementTime,
             "getPosition": self.getPosition,
             "moveAbsolute": self.moveAbsolute,
             "moveRelative": self.moveRelative,
