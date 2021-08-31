@@ -688,3 +688,14 @@ class MicroscopeModulator(MicroscopeBase):
         att_del("wavelength"),
         f"wavelength property",
     )
+
+    ### UI functions ###
+    def makeUI(self, parent):
+        self.panel = wx.Panel(parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        adv_button = cockpit.gui.device.Button(
+            parent=self.panel, label=self.name, leftAction=self.showSettings
+        )
+        sizer.Add(adv_button)
+        self.panel.SetSizerAndFit(sizer)
+        return self.panel
