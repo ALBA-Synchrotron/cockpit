@@ -87,7 +87,7 @@ class Objectives(wx.EvtHandler):
             match = re.search(r"^([0-9.])+x", name)
             if match is None:
                 raise Exception("failed to parse magnification from %s" % name)
-            return float(match[1])
+            return float(match.group(1))
 
         return sorted(self.GetNames(), key=parse_magnification)
 
