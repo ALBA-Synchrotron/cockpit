@@ -2,6 +2,7 @@ import wx
 import numpy as np
 
 from cockpit.experiment import experiment, actionTable
+from cockpit.gui import guiUtils
 import cockpit.util.userConfig
 import cockpit.util.logger
 from cockpit import depot
@@ -185,22 +186,59 @@ class ExperimentUI(wx.Panel):
         self.configKey = configKey
         self.settings = self.loadSettings()
 
+        self.simArgs = {}
+        sizer = wx.GridSizer(1, 2, 2, 2)
+        options = [
+            ('cryosimNangles',
+             'Number of angles',
+             'Number of divisions of the 360 angular range',
+             guiUtils.INTVALIDATOR),
+            ('cryosimNphases',
+             'Number of phases',
+             'Number of divisions of the 180 phase range',
+             guiUtils.INTVALIDATOR),
+        ]
+
+        for key, label, helperString, validator in options:
+            control = guiUtils.addLabeledInput(self, sizer, 
+                label = label, defaultValue = self.settings[key],
+                helperString = helperString)
+            control.SetValidator(validator)
+            self.simArgs[key] = control
+        self.SetSizerAndFit(sizer)
+
+
     ## Given a parameters dict (parameter name to value) to hand to the
     # experiment instance, augment them with our special parameters.
     def augmentParams(self, params):
-        params["numAngles"] = 3
-        params["numPhases"] = 5
+        self.saveSettings()
+        numAngles = self.simArgs['cryosimNangles']
+        params["numAngles"] = guiUtils.tryParseNum(numAngles)
+        numPhases = self.simArgs['cryosimNphases']
+        params["numPhases"] = guiUtils.tryParseNum(numPhases)
         params["slmHandler"] = depot.getHandler("slm", depot.EXECUTOR)
         params["rotorHandler"] = depot.getHandler("rotor", depot.EXECUTOR)
         return params
 
     ## Load the saved experiment settings, if any.
     def loadSettings(self):
-        result = cockpit.util.userConfig.getValue(self.configKey, default={})
-        # add                 "shouldOnlyDoOneAngle": False,
-
+        default = {
+            'cryosimNangles': '3',
+            'cryosimNphases': '5',
+        }
+        result = cockpit.util.userConfig.getValue(self.configKey + '_cryosim',
+                                                  default=default)
         return result
 
+    ## Generate a dict of our settings.
     def getSettingsDict(self):
-        all_settings = super().getSettingsDict()
-        return all_settings
+        return {key: c.GetValue() for key, c in self.simArgs.items()}
+
+
+    ## Save the current experiment settings to config.
+    def saveSettings(self, settings = None):
+        if settings is None:
+            settings = self.getSettingsDict()
+        cockpit.util.userConfig.setValue(
+                self.configKey + '_cryosim',
+                settings)
