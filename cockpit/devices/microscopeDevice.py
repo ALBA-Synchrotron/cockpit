@@ -333,13 +333,16 @@ class MicroscopeLaser(MicroscopeBase):
         callbacks = {'setEnabled': lambda name, on: self._setEnabled(on),
                      'setExposureTime': lambda name, value: setattr(self, '_exposureTime', value),
                      'getExposureTime': lambda name: self._exposureTime}
+        self._exposureTime = 100
         if trigsource:
             trighandler = depot.getHandler(trigsource, depot.EXECUTOR)
         else:
-            print("No trigger source. Using writeDigital instead")
+            print("No trigger source. Using software trigger instead")
             trighandler = None
-            callbacks['writeDigital'] = self._setEnabled
-        self._exposureTime = 100
+            callbacks['softTrigger'] = self.softTrigger
+            callbacks['setExposureTime'] = lambda name, value: self._proxy.set_exposure_time(value)
+            callbacks['getExposureTime'] = lambda name: self._proxy.get_exposure_time()
+            self._exposureTime = callbacks['getExposureTime'](self.name)
         self.handlers.append(cockpit.handlers.lightSource.LightHandler(
             self.name,
             self.name + ' light source',
@@ -359,6 +362,8 @@ class MicroscopeLaser(MicroscopeBase):
     def _getPower(self) -> float:
         return self._proxy.power
 
+    def softTrigger(self):
+            self._proxy.trigger()
 
     def finalizeInitialization(self):
         # This should probably work the other way around:
