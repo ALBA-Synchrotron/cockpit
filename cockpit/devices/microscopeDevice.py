@@ -376,6 +376,17 @@ class MicroscopeLaser(MicroscopeBase):
         lh = self.handlers[-1]
         lh.state = int(self._proxy.get_is_on())
 
+    ### UI functions ###
+    def makeUI(self, parent):
+        self.panel = wx.Panel(parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        adv_button = cockpit.gui.device.Button(
+            parent=self.panel, label=self.name, leftAction=self.showSettings
+        )
+        sizer.Add(adv_button)
+        self.panel.SetSizerAndFit(sizer)
+        return self.panel
+
 
 class MicroscopeFilter(MicroscopeBase):
     def __init__(self, *args, **kwargs):
