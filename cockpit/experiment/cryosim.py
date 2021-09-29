@@ -76,11 +76,6 @@ class CryoSIM(experiment.Experiment):
         if camsToReset:
             curTime = self.resetCams(curTime, camsToReset, table)
 
-        # Since the laser con not be triggered by software, start the laser
-        # at the begining of the experiment and stop it at the end.
-        for light in self.lights:
-            table.addAction(curTime, light, True)
-
         prevAltitude = None
         numZSlices = int(np.ceil(self.zHeight / self.sliceHeight))
         if self.zHeight > 1e-6:
@@ -144,17 +139,13 @@ class CryoSIM(experiment.Experiment):
             self.zStart,
         )
 
-        # Since the laser con not be triggered by software, start the laser
-        # at the begining of the experiment and stop it at the end.
-        for light in self.lights:
-            table.addAction(curTime, light, False)
-
         return table
 
     # needed for generateActions
     def expose(self, curTime, cameras, table):
         max_acq_time = 0
         last_ready = 0
+
         for camera in cameras:
             exposure = camera.getExposureTime()
             # getTimeBetweenExposures has to be read after set exposure (at run)
@@ -166,11 +157,16 @@ class CryoSIM(experiment.Experiment):
             if last_ready < ready:
                 last_ready = decimal.Decimal(ready)
 
+        for light in self.lights:
+            table.addAction(curTime, light, True)
+
         for camera in cameras:
             table.addAction(curTime, camera, True)
             self.cameraToImageCount[camera] += 1
 
-        exposureEndTime = max(last_ready, curTime + max_acq_time)
+        curTime += max_acq_time
+
+        exposureEndTime = max(last_ready, curTime)
         return exposureEndTime
 
 

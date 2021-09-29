@@ -377,8 +377,8 @@ class Experiment:
                     if h.deviceType == depot.CAMERA and "softTrigger" in h.callbacks:
                         fn = lambda: h.callbacks["softTrigger"]()
                     elif (h.deviceType == depot.LIGHT_TOGGLE
-                          and "writeDigital" in h.callbacks):
-                        fn = partial(h.callbacks["writeDigital"], action)
+                          and "softTrigger" in h.callbacks):
+                        fn = lambda: h.callbacks["softTrigger"]()
                     elif h.deviceType == depot.STAGE_POSITIONER:
                         fn = lambda: h.moveAbsolute(action)
 
