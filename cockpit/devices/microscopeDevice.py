@@ -306,6 +306,9 @@ class MicroscopeLaser(MicroscopeBase):
       type: ExecutorDevice
       ...
     """
+
+    _power = 0.2
+
     def _setEnabled(self, on):
         if on:
             self._proxy.enable()
@@ -322,7 +325,7 @@ class MicroscopeLaser(MicroscopeBase):
                 'getPower': self._getPower,
             },
             self.config.get('wavelength', None),
-            curPower=.2,
+            curPower=self._power,
             isEnabled=True))
         # Light Handler
         trigsource = self.config.get('triggersource', None)
@@ -350,7 +353,8 @@ class MicroscopeLaser(MicroscopeBase):
 
     @cockpit.util.threads.callInNewThread
     def _setPower(self, power: float) -> None:
-        self._proxy.power = power
+        self._power = power
+        self._proxy.power = self._power
 
     def _getPower(self) -> float:
         return self._proxy.power
