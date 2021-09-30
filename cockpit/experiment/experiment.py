@@ -314,7 +314,12 @@ class Experiment:
             # uses camera.getExposureTime to figure out timings.
             exposureTime = float(self.getExposureTimeForCamera(camera))
             camera.setExposureTime(exposureTime)
+        # Set the exposure time for light with such capability
+        for light in self.lights:
+            if 'setExposureTime' in light.callbacks:
+                light.callbacks['setExposureTime'](light.name, exposureTime)
 
+    
     ## Allow devices to examine the ActionTable we will be running, and modify
     # it if necessary.
     def examineActions(self):
