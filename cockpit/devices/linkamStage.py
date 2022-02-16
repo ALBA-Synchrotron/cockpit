@@ -254,15 +254,23 @@ class LinkamStage(MicroscopeBase, Device):
         panel.Sizer.Add(right_sizer)
 
         self.elements = {}
+
         lightButton = wx.ToggleButton(panel, wx.ID_ANY, "light")
         lightButton.Bind(wx.EVT_TOGGLEBUTTON,
                          lambda evt: self._proxy.set_light(evt.EventObject.Value))
         self.elements['light'] = lightButton
         left_sizer.Add(lightButton, flag=wx.EXPAND)
+
         condensorButton = wx.ToggleButton(panel, wx.ID_ANY, "condensor")
         condensorButton.Bind(wx.EVT_TOGGLEBUTTON,
                              lambda evt: self._proxy.set_condensor(evt.EventObject.Value))
         left_sizer.Add(condensorButton, flag=wx.EXPAND)
+
+        autotopupButton = wx.ToggleButton(panel, wx.ID_ANY, "autotopup")
+        autotopupButton.Bind(wx.EVT_TOGGLEBUTTON,
+                             lambda evt: self._proxy.set_autotopup(evt.EventObject.Value))
+        left_sizer.Add(autotopupButton, flag=wx.EXPAND)
+
         ## Generate the value displays.
         for d in self._temperature_names:
             self.elements[d] = cockpit.gui.device.ValueDisplay(
