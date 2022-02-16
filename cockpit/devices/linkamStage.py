@@ -269,6 +269,7 @@ class LinkamStage(MicroscopeBase, Device):
         autotopupButton = wx.ToggleButton(panel, wx.ID_ANY, "autotopup")
         autotopupButton.Bind(wx.EVT_TOGGLEBUTTON,
                              lambda evt: self._proxy.set_autotopup(evt.EventObject.Value))
+        self.elements['autotopup'] = autotopupButton
         left_sizer.Add(autotopupButton, flag=wx.EXPAND)
 
         ## Generate the value displays.
@@ -389,6 +390,7 @@ class LinkamStage(MicroscopeBase, Device):
         for t in self._temperature_names:
             self.elements[t].update(self.status.get('t_' + t))
         self.elements['light'].SetValue(status.get('light', False))
+        self.elements['autotopup'].SetValue(status.get('autoTopUp', False))
         # Refills
         lines = []
         now = datetime.datetime.now()
