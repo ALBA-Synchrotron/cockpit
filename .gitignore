@@ -16,3 +16,8 @@
 /.tox
 /.mypy_cache
 /.pytest_cache
+
+## 
+.idea/
+.vs/
+.vscode/
