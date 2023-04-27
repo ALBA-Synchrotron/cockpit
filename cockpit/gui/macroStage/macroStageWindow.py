@@ -290,7 +290,7 @@ class MacroStagePanel(wx.Panel):
         # need a specific size and draw on whatever space is available
         # to them.
         width = 84
-        height = width * 2 / 3.0
+        height = int(width * 2 / 3.0)
 
         # Remember that, in classic "row means X, right?" fashion,
         # WX has flipped its position and size tuples, so
