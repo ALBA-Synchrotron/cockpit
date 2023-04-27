@@ -68,17 +68,8 @@ from cockpit.experiment import cryosim
 
 ## List of registered modules.
 registeredModules = [
-    zStack,
-    sweptShutter,
-    offsetGainCorrection,
-    responseMap,
-    stutteredZStack,
-    optoScriptExample,
-    structuredIllumination,
-    SIMFlux,
-    si2d,
-    rotatorSweep,
     cryosim,
+    zStack,
 ]
 
 
