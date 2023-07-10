@@ -390,7 +390,12 @@ class LinkamStage(MicroscopeBase, Device):
         for t in self._temperature_names:
             self.elements[t].update(self.status.get('t_' + t))
         self.elements['light'].SetValue(status.get('light', False))
-        self.elements['autotopup'].SetValue(status.get('autoTopUp', False))
+
+        # During refilling 'autotopup' is False so we need to check FillSignal
+        topupStatus = status.get('sampleDewarFillSignal', False)
+        if not topupStatus:
+            topupStatus = status.get('autoTopUp', False)
+        self.elements['autotopup'].SetValue(topupStatus)
         # Refills
         lines = []
         now = datetime.datetime.now()
