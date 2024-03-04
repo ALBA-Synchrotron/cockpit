@@ -380,12 +380,24 @@ class MicroscopeLaser(MicroscopeBase):
     def makeUI(self, parent):
         self.panel = wx.Panel(parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        adv_button = cockpit.gui.device.Button(
-            parent=self.panel, label=self.name, leftAction=self.showSettings
-        )
+
+        self.elements = {}
+
+        standbyButton = wx.ToggleButton(self.panel, wx.ID_ANY, "Standby")
+        standbyButton.Bind(wx.EVT_TOGGLEBUTTON,
+                         lambda evt: self._proxy.set_standby(evt.EventObject.Value))
+        self.elements['standby'] = standbyButton
+        sizer.Add(standbyButton, flag=wx.EXPAND)
+
+        adv_button = wx.Button(parent=self.panel, label="Settings")
+        adv_button.Bind(wx.EVT_LEFT_UP, self.showSettings)
         sizer.Add(adv_button)
         self.panel.SetSizerAndFit(sizer)
+        
         return self.panel
+
+    def makeInitialPublications(self):
+        self.elements['standby'].SetValue(True)
 
 
 class MicroscopeFilter(MicroscopeBase):
