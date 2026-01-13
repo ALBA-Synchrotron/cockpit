@@ -31,6 +31,9 @@ dependencies = [
     "numpy",
     "pyserial",
     "scipy",
+    ## pkg_resources was removed from Python 3.12 and moved to the
+    ## the setuptools distribution.
+    "setuptools; python_version >= '3.12'",
     "wxPython>=4.1",
 ]
 
