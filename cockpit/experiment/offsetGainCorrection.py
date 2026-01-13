@@ -141,10 +141,10 @@ class OffsetGainCorrectionExperiment(experiment.Experiment):
         ## Maps camera handlers to functions to record their images.
         self.camToFunc = {}
         for camera in self.cameras:
-            self.camToFunc[
-                camera
-            ] = lambda image, timestamp, camera=camera: self.recordImage(
-                image, camera
+            self.camToFunc[camera] = (
+                lambda image, timestamp, camera=camera: self.recordImage(
+                    image, camera
+                )
             )
 
         ## Thread for tracking when we're done receiving images.
@@ -409,9 +409,9 @@ class ExperimentUI(wx.Panel):
             rowSizer,
             "Keep the raw data in addition to the averaged files.",
         )
-        self.correctionArgs[
-            "correctionShouldPreserveIntermediaryFiles"
-        ] = control
+        self.correctionArgs["correctionShouldPreserveIntermediaryFiles"] = (
+            control
+        )
         sizer.Add(rowSizer)
         self.SetSizerAndFit(sizer)
 

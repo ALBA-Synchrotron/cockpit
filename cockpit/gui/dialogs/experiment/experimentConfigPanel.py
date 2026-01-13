@@ -438,9 +438,9 @@ class ExperimentConfigPanel(wx.Panel):
         if module in self.experimentModuleToPanel:
             # Have specific parameters for this experiment type; store them
             # too.
-            settings[
-                "experimentSpecificValues"
-            ] = self.experimentModuleToPanel[module].getSettingsDict()
+            settings["experimentSpecificValues"] = (
+                self.experimentModuleToPanel[module].getSettingsDict()
+            )
 
         # Get the filepath to save settings to.
         dialog = wx.FileDialog(

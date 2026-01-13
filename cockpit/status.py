@@ -18,7 +18,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Cockpit.  If not, see <http://www.gnu.org/licenses/>.
 
-""" A simple device status script for cockpit.
+"""A simple device status script for cockpit.
 
 This script examines cockpit config. files, then reports
 the host and port status for each remote device.

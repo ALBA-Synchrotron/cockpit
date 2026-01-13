@@ -245,9 +245,9 @@ class ExperimentUI(wx.Panel):
         if shouldSave:
             self.saveSettings()
         params["lightToSequence"] = self.getLightToSequence()
-        params[
-            "lightToIsOnDuringAcquisition"
-        ] = self.getLightToIsOnDuringAcquisition()
+        params["lightToIsOnDuringAcquisition"] = (
+            self.getLightToIsOnDuringAcquisition()
+        )
         return params
 
     ## Load the saved experiment settings, if any.

@@ -468,9 +468,9 @@ class ExperimentUI(wx.Panel):
             rowSizer,
             "Keep the raw data in addition to the averaged files.",
         )
-        self.responseArgs[
-            "responseMapShouldPreserveIntermediaryFiles"
-        ] = control
+        self.responseArgs["responseMapShouldPreserveIntermediaryFiles"] = (
+            control
+        )
         sizer.Add(rowSizer)
         self.SetSizerAndFit(sizer)
 

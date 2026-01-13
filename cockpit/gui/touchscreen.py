@@ -1160,9 +1160,11 @@ class StageControlXY(wx.Panel):
         )
         cockpit.gui.EvtEmitter(self, events.STAGE_STEP_SIZE).Bind(
             cockpit.gui.EVT_COCKPIT,
-            lambda e: varctrl_step_x.set_value(e.EventData[1])
-            if e.EventData[0] == 0
-            else e.Skip(),
+            lambda e: (
+                varctrl_step_x.set_value(e.EventData[1])
+                if e.EventData[0] == 0
+                else e.Skip()
+            ),
         )
         sizer_step_x.Add(varctrl_step_x, 1, wx.LEFT, 5)
         ## y
@@ -1182,9 +1184,11 @@ class StageControlXY(wx.Panel):
         )
         cockpit.gui.EvtEmitter(self, events.STAGE_STEP_SIZE).Bind(
             cockpit.gui.EVT_COCKPIT,
-            lambda e: varctrl_step_y.set_value(e.EventData[1])
-            if e.EventData[0] == 1
-            else e.Skip(),
+            lambda e: (
+                varctrl_step_y.set_value(e.EventData[1])
+                if e.EventData[0] == 1
+                else e.Skip()
+            ),
         )
         sizer_step_y.Add(varctrl_step_y, 1, wx.LEFT, 5)
         ## common
@@ -1303,9 +1307,11 @@ class StageControlZ(wx.Panel):
         )
         cockpit.gui.EvtEmitter(self, events.STAGE_STEP_SIZE).Bind(
             cockpit.gui.EVT_COCKPIT,
-            lambda e: varctrl_step_z.set_value(e.EventData[1])
-            if e.EventData[0] == 2
-            else e.Skip(),
+            lambda e: (
+                varctrl_step_z.set_value(e.EventData[1])
+                if e.EventData[0] == 2
+                else e.Skip()
+            ),
         )
         sizer_step_z.Add(varctrl_step_z, 1, wx.LEFT, 5)
         sizer.Add(sizer_step_z, 0, wx.EXPAND | wx.TOP, 10)
