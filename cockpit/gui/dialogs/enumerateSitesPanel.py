@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
-## Copyright (C) 2018 Ian Dobbie <ian.dobbie@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -50,16 +49,20 @@
 ## ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ## POSSIBILITY OF SUCH DAMAGE.
 
-
-import cockpit.gui.guiUtils
-import cockpit.util.logger
-import cockpit.interfaces.stageMover
+import logging
 
 import wx
+
+import cockpit.gui.guiUtils
+import cockpit.interfaces.stageMover
+
+
+_logger = logging.getLogger(__name__)
 
 
 ## @package dialogs.enumerateSitesPanel
 # This module contains the EnumerateSitesPanel class
+
 
 ## This class provides a standard way to list out sites -- saved positions
 # in interfaces.stageMover, which each have a corresponding number when
@@ -69,32 +72,46 @@ import wx
 # a frequency. E.g. "1,2-4(2),5-8(3)" would mean "1 always, 2-4 every other
 # time, 5-8 every third time".
 class EnumerateSitesPanel(wx.Panel):
-    def __init__(self, parent, label, id = -1, size = (200, -1),
-                 minSize = (280, -1), defaultIsAllSites = True):
+    def __init__(
+        self,
+        parent,
+        label,
+        id=-1,
+        size=(200, -1),
+        minSize=(280, -1),
+        defaultIsAllSites=True,
+    ):
         super().__init__(parent, id)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sites = cockpit.gui.guiUtils.addLabeledInput(parent = self, 
-                sizer = sizer,
-                label = label, defaultValue = '',
-                size = size, minSize = minSize)
-        self.sites.SetToolTip(wx.ToolTip("Comma-delimited, or with range " +
-                "indicators, for example:\n1, 3, 5-10, 14, 17-23\n" +
-                "You may also include frequencies in parentheses, e.g.\n" +
-                "1-4,5(2),6-10(4)\n" +
-                "to use sites 1-4 every time, site 5 every other time, " +
-                "and sites 6-10 every fourth time."))
+        self.sites = cockpit.gui.guiUtils.addLabeledInput(
+            parent=self,
+            sizer=sizer,
+            label=label,
+            defaultValue="",
+            size=size,
+            minSize=minSize,
+        )
+        self.sites.SetToolTip(
+            wx.ToolTip(
+                "Comma-delimited, or with range "
+                + "indicators, for example:\n1, 3, 5-10, 14, 17-23\n"
+                + "You may also include frequencies in parentheses, e.g.\n"
+                + "1-4,5(2),6-10(4)\n"
+                + "to use sites 1-4 every time, site 5 every other time, "
+                + "and sites 6-10 every fourth time."
+            )
+        )
 
-        siteListStr = 'Most recent site'
+        siteListStr = "Most recent site"
         if defaultIsAllSites:
             sites = cockpit.interfaces.stageMover.getAllSites()
             if not sites:
                 siteListStr = "You must select points first"
             else:
-                siteListStr = '1-%d' % sites[-1].uniqueID
+                siteListStr = "1-%d" % sites[-1].uniqueID
         self.sites.SetValue(siteListStr)
 
         self.SetSizerAndFit(sizer)
-
 
     def getSitesList(self):
         # Construct the input list of sites
@@ -102,28 +119,34 @@ class EnumerateSitesPanel(wx.Panel):
         if sitesString == "Most recent site":
             return ([-1], [1])
         try:
-            siteTokens = self.sites.GetValue().split(',')
+            siteTokens = self.sites.GetValue().split(",")
             baseIndices = []
             baseFrequencies = []
             for token in siteTokens:
                 # Yeah, I could use regexes for this...but I'm lazy
                 frequency = 1
-                if token.find('(') != -1:
+                if token.find("(") != -1:
                     # Extract frequency
-                    token, frequency = token.split('(')
-                    frequency = int(frequency.split(')')[0])
-                if token.find('-') != -1:
-                    first, last = token.split('-')
+                    token, frequency = token.split("(")
+                    frequency = int(frequency.split(")")[0])
+                if token.find("-") != -1:
+                    first, last = token.split("-")
                     # These ranges are inclusive, so add 1 to last
-                    newIndices = [i for i in range(int(first), int(last) + 1)
-                                  if cockpit.interfaces.stageMover.doesSiteExist(i)]
+                    newIndices = [
+                        i
+                        for i in range(int(first), int(last) + 1)
+                        if cockpit.interfaces.stageMover.doesSiteExist(i)
+                    ]
                     baseIndices.extend(newIndices)
                     baseFrequencies.extend([frequency] * len(newIndices))
                 elif cockpit.interfaces.stageMover.doesSiteExist(int(token)):
                     baseIndices.append(int(token))
                     baseFrequencies.append(frequency)
-                
+
             return (baseIndices, baseFrequencies)
         except Exception as e:
-            cockpit.util.logger.log.warning("Invalid site list \"%s\"; returning no sites", self.sites.GetValue())
+            _logger.warning(
+                'Invalid site list "%s"; returning no sites',
+                self.sites.GetValue(),
+            )
             return []

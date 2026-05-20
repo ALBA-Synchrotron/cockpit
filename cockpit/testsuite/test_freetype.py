@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2020 David Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -21,13 +21,19 @@
 import unittest
 
 import cockpit.gui.freetype
+from cockpit.testsuite.test_gui import WxTestCase
 
 
-class FaceTestCase(unittest.TestCase):
+class FaceTestCase(WxTestCase):
     def setUp(self):
-        self.face = cockpit.gui.freetype.Face(18)
+        super().setUp()
+        self.face = cockpit.gui.freetype.Face(self.frame, 18)
 
     def test_render(self):
         ## Not sure how to actual test if it gets rendered, but this
         ## should at least not error.
-        self.face.render('foobar')
+        self.face.render("foobar")
+
+
+if __name__ == "__main__":
+    unittest.main()

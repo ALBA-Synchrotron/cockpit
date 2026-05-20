@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -80,13 +80,10 @@ import cockpit.events
 ## filesystem filepath.  It is a /-separated filepath, even on
 ## windows, so do not use os.path.join.
 
-IMAGES_PATH = pkg_resources.resource_filename(
-    'cockpit',
-    'resources/images/'
-)
+IMAGES_PATH = pkg_resources.resource_filename("cockpit", "resources/images/")
 
 
-## A single event type for all cockpit.events. The origian cockpit
+## A single event type for all cockpit.events. The original cockpit
 ## event data is passed back as CockpitEvent.EventData.
 CockpitEvent, EVT_COCKPIT = wx.lib.newevent.NewEvent()
 
@@ -114,12 +111,14 @@ class EvtEmitter(wx.EvtHandler):
     always called.
 
     """
+
     def __init__(self, parent, cockpit_event_type):
         assert isinstance(parent, wx.Window)
         super().__init__()
         self._cockpit_event_type = cockpit_event_type
-        cockpit.events.subscribe(self._cockpit_event_type,
-                                 self._EmitCockpitEvent)
+        cockpit.events.subscribe(
+            self._cockpit_event_type, self._EmitCockpitEvent
+        )
 
         ## Destroy() is not called when the parent is destroyed, see
         ## https://github.com/wxWidgets/Phoenix/issues/630 so we need
@@ -130,8 +129,9 @@ class EvtEmitter(wx.EvtHandler):
         self.AddPendingEvent(CockpitEvent(EventData=args))
 
     def _Unsubscribe(self):
-        cockpit.events.unsubscribe(self._cockpit_event_type,
-                                   self._EmitCockpitEvent)
+        cockpit.events.unsubscribe(
+            self._cockpit_event_type, self._EmitCockpitEvent
+        )
 
     def _OnParentDestroy(self, event):
         self._Unsubscribe()
@@ -142,10 +142,77 @@ class EvtEmitter(wx.EvtHandler):
         return super().Destroy()
 
 
+def create_monospaced_multiline_text_ctrl(
+    parent: wx.Window, text: str, min_rows=0, min_cols=0
+) -> wx.TextCtrl:
+    """Create a `wx.TextCtrl` to display a block of code.
+
+    This is its own separate function to address wxWidget issues when
+    computing the right size to display the whole text.
+
+    The `min_rows` and `min_cols` can be used to SetInitialSize to at
+    least a specific number of lines and characters per line.
+
+    Args:
+        parent: parent window for the created TextCtrl.
+        text: initial text to display which is used to compute the
+            control initial size.
+        min_rows: initial minimum number of rows/lines of text.
+        min_cols: initial minimum number of columns of text/characters
+            per line.
+
+    """
+    text_ctrl = wx.TextCtrl(
+        parent,
+        value=text,
+        style=(wx.TE_MULTILINE | wx.TE_DONTWRAP | wx.TE_READONLY),
+    )
+
+    ## 'w.Font.Family = f' does not work because 'w.Font' returns a
+    ## copy of the font.  We need to modify that copy and assign back.
+    text_ctrl_font = text_ctrl.Font
+    text_ctrl_font.Family = wx.FONTFAMILY_TELETYPE
+    text_ctrl.Font = text_ctrl_font
+
+    ## The default width of a TextCtrl does not take into account its
+    ## actual content.  We need to manually set its size (issue #497)
+    if wx.Platform in ["__WXMSW__", "__WXMAC__"]:
+        ## On Windows and Mac, GetTextExtent ignores newlines so we
+        ## need to manually compute the text extent.
+        text_lines = text_ctrl.Value.splitlines()
+        longest_line = max(text_lines, key=len)
+        one_line_size = text_ctrl.GetTextExtent(longest_line)
+        text_ctrl_text_size = wx.Size(
+            width=one_line_size[0], height=(one_line_size[1] * len(text_lines))
+        )
+    else:
+        text_ctrl_text_size = text_ctrl.GetTextExtent(text_ctrl.Value)
+
+    char_text_size = text_ctrl.GetTextExtent("a")
+
+    text_ctrl_text_size.IncTo(
+        wx.Size(
+            width=char_text_size.Width * min_cols,
+            height=char_text_size.Height * min_rows,
+        )
+    )
+
+    ## The computed height seems to always be short of some pixels
+    ## (don't know where the issue, probably on GetSizeFromTextSize or
+    ## GetTextExtent).  It would go unnoticed if not by the vertical
+    ## scrollbar.  So we just add space for an extra line of text.
+    text_ctrl_text_size.IncBy(dx=0, dy=char_text_size.Height)
+
+    text_ctrl.SetInitialSize(
+        text_ctrl.GetSizeFromTextSize(text_ctrl_text_size)
+    )
+    return text_ctrl
+
+
 def ExceptionBox(caption="", parent=None):
     """Show python exception in a modal dialog.
 
-    Creates a modal dialog without any option other than dismising the
+    Creates a modal dialog without any option other than dismissing the
     exception information.  The exception traceback is displayed in a
     monospaced font and its text can be copied into the clipboard.
 
@@ -158,7 +225,7 @@ def ExceptionBox(caption="", parent=None):
     """
     current_exception = sys.exc_info()[1]
     if current_exception is None:
-        raise RuntimeError('Not handling an exception')
+        raise RuntimeError("Not handling an exception")
 
     ## wx.MessageDialog looks better than plain wx.Dialog but we want
     ## to include the traceback without line-wrapping and to be able
@@ -167,37 +234,25 @@ def ExceptionBox(caption="", parent=None):
     ## subclass of wx.Dialog, it uses native widgets for simpler
     ## dialogs, such as gtk_message_dialog_new.
 
-    dialog = wx.Dialog(parent, title=caption, name="exception-dialog",
-                       style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+    dialog = wx.Dialog(
+        parent,
+        title=caption,
+        name="exception-dialog",
+        style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+    )
     message = wx.StaticText(dialog, label=str(current_exception))
-    details = wx.TextCtrl(dialog, value=traceback.format_exc(),
-                          style=(wx.TE_MULTILINE|wx.TE_DONTWRAP|wx.TE_READONLY))
 
-    ## 'w.Font.Family = f' does not work because it 'w.Font' returns a
-    ## copy of the font.  We need to modify that copy and assign back.
-    details_font = details.Font
-    details_font.Family = wx.FONTFAMILY_TELETYPE
-    details.Font = details_font
+    details = create_monospaced_multiline_text_ctrl(
+        parent=dialog, text=traceback.format_exc()
+    )
 
     sizer = wx.BoxSizer(wx.VERTICAL)
     sizer.Add(message, wx.SizerFlags(0).Expand().Border())
     sizer.Add(details, wx.SizerFlags(1).Expand().Border())
-    sizer.Add(dialog.CreateSeparatedButtonSizer(wx.OK),
-              wx.SizerFlags(0).Expand().Border())
-
-    ## The default width of a TextCtrl does not take into account its
-    ## actual content.  We need to manually set its size (issue #497)
-    if (wx.Platform != '__WXMSW__') and (wx.Platform != '__WXMAC__'):
-        details_text_size = details.GetTextExtent(details.Value)
-    else:
-        ## On Windows and Mac, GetTextExtent ignores newlines so we
-        ## need to manually compute the text extent.
-        traceback_lines = details.Value.splitlines()
-        longest_line = max(traceback_lines, key=len)
-        one_line_size = details.GetTextExtent(longest_line)
-        details_text_size = wx.Size(one_line_size[0],
-                                    one_line_size[1] * len(traceback_lines))
-    details.SetInitialSize(details.GetSizeFromTextSize(details_text_size))
+    sizer.Add(
+        dialog.CreateSeparatedButtonSizer(wx.OK),
+        wx.SizerFlags(0).Expand().Border(),
+    )
 
     dialog.SetSizerAndFit(sizer)
     dialog.Centre()

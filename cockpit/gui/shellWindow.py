@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2020 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -20,10 +20,15 @@
 
 import wx.py.shell
 
+
 class ShellWindow(wx.py.shell.ShellFrame):
     SHOW_DEFAULT = False
+    LIST_AS_COCKPIT_WINDOW = True
+
 
 def makeWindow(parent):
     window = ShellWindow(parent)
+    window.shell.run("import wx")
+    window.shell.run("depot = wx.GetApp().Depot")
     # Default icon for the ShellFrame is the PyCrust, so replace it.
     window.SetIcon(parent.GetIcon())

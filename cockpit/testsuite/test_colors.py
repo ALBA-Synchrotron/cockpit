@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2019 Thomas Park <thomasparks@outlook.com>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -59,5 +59,5 @@ class TestHsvToRgb(unittest.TestCase):
         self.assertEqual((0, 0, 1), G)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

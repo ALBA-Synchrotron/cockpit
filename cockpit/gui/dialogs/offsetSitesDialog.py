@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
-## Copyright (C) 2018 Ian Dobbie <ian.dobbie@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -51,42 +50,49 @@
 ## POSSIBILITY OF SUCH DAMAGE.
 
 
+import wx
+
 import cockpit.gui.guiUtils
 
-import wx
 
 ## @package dialogs.offsetSitesDialog
 # This module contains the \link dialogs.offsetSitesDialog.OffsetSites_Dialog
 # OffsetSites_Dialog \endlink
 # class, and code for displaying it.
 
+
 ## This dialog allows the user to add a positional offset to a selection
 # of sites.
 class OffsetSites_Dialog(wx.Dialog):
-    ## Create the dialog, and lay out its UI widgets. 
+    ## Create the dialog, and lay out its UI widgets.
     def __init__(self, parent, *args):
         super().__init__(parent, -1, "Move Sites", *args)
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         label = wx.StaticText(self, -1, "What offset should we apply?")
         sizer.Add(label, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
 
         self.controls = []
-        for label in ('X', 'Y', 'Z'):
-            self.controls.append(cockpit.gui.guiUtils.addLabeledInput(
-                    parent = self, sizer = sizer,
-                    label = "%s:" % label, defaultValue = '',
-                    size = (60, -1), minSize = (100, -1),
-                    border = 5,
-                    flags = wx.ALIGN_CENTRE | wx.ALL)
+        for label in ("X", "Y", "Z"):
+            self.controls.append(
+                cockpit.gui.guiUtils.addLabeledInput(
+                    parent=self,
+                    sizer=sizer,
+                    label="%s:" % label,
+                    defaultValue="",
+                    size=(60, -1),
+                    minSize=(100, -1),
+                    border=5,
+                    flags=wx.ALIGN_CENTRE | wx.ALL,
+                )
             )
-        
+
         buttonBox = wx.BoxSizer(wx.HORIZONTAL)
 
         cancelButton = wx.Button(self, wx.ID_CANCEL, "Cancel")
         cancelButton.SetToolTip(wx.ToolTip("Close this window"))
         buttonBox.Add(cancelButton, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
-        
+
         startButton = wx.Button(self, wx.ID_OK, "Move sites")
         buttonBox.Add(startButton, 0, wx.ALIGN_CENTRE | wx.ALL, 5)
 
@@ -97,7 +103,6 @@ class OffsetSites_Dialog(wx.Dialog):
         self.SetAutoLayout(True)
         sizer.Fit(self)
 
-
     ## Return a list of floats indicating the offset to add.
     def getOffset(self):
         result = []
@@ -107,7 +112,6 @@ class OffsetSites_Dialog(wx.Dialog):
             else:
                 result.append(0)
         return result
-
 
 
 ## Show the dialog. If it has not been created yet, then create it first.

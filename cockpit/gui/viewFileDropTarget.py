@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -50,16 +50,16 @@
 ## POSSIBILITY OF SUCH DAMAGE.
 
 
+import wx
+
 from cockpit.gui import fileViewerWindow
 
-import wx
 
 ## Allow users to drag files onto the provided window to pop up a viewer.
 class ViewFileDropTarget(wx.FileDropTarget):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
-
 
     def OnDropFiles(self, x, y, filenames):
         for filename in filenames:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2020 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -46,7 +46,7 @@ class Objectives(wx.EvtHandler):
     At any time, only one objective is selected, which prevents its use
     on a system where different cameras image through different
     objectives at the same time (see `cockpit issue #554
-    <https://github.com/MicronOxford/cockpit/issues/554>`_).
+    <https://github.com/microscope-cockpit/cockpit/issues/554>`_).
 
     Events emitted by this class
     ----------------------------
@@ -81,6 +81,7 @@ class Objectives(wx.EvtHandler):
 
     def GetNamesSorted(self) -> typing.List[str]:
         """List of all objective names sorted by magnification."""
+
         # FIXME: we should not do this.  Instead, objective device and
         # handlers should have a magnification field (see issue #139).
         def parse_magnification(name):
@@ -103,7 +104,7 @@ class Objectives(wx.EvtHandler):
         self.QueueEvent(event)
         # Camera devices care when objectives changes to update their
         # transforms so we need to publish a cockpit event as well.
-        cockpit.events.publish("objective change", self._current)
+        cockpit.events.publish(cockpit.events.OBJECTIVE_CHANGE, self._current)
 
     def GetName(self) -> str:
         """Convenience getter for name of current objective."""

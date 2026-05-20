@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
-## Copyright (C) 2018 Thomas Park <thomasparks@outlook.com>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -52,12 +51,11 @@
 
 """Does an open-shutter sweep in Z."""
 
-from cockpit.experiment import actionTable
-from cockpit.experiment import experiment
+from cockpit.experiment import actionTable, experiment
 
 
 ## Provided so the UI knows what to call this experiment.
-EXPERIMENT_NAME = 'Open-shutter sweep'
+EXPERIMENT_NAME = "Open-shutter sweep"
 
 
 ## This class handles open-shutter sweep experiments, where we move the sample
@@ -71,10 +69,11 @@ class OpenShutterSweepExperiment(experiment.Experiment):
         for cameras, lightTimePairs in self.exposureSettings:
             # Start the stage at the bottom.
             table.addAction(curTime, self.zPositioner, 0)
-            # Ensure our exposure is at least as long as the time needed to 
+            # Ensure our exposure is at least as long as the time needed to
             # move through the sample.
-            motionTime, stabilizationTime = self.zPositioner.getMovementTime(0,
-                    self.zHeight)
+            motionTime, stabilizationTime = self.zPositioner.getMovementTime(
+                0, self.zHeight
+            )
             # Image the sample.
             curTime = self.expose(curTime, cameras, lightTimePairs, table)
 
@@ -84,7 +83,8 @@ class OpenShutterSweepExperiment(experiment.Experiment):
             # Move back to the start so we're ready for the next set of cameras
             # or the next rep.
             motionTime, stabilizationTime = self.zPositioner.getMovementTime(
-                    self.zHeight, 0)
+                self.zHeight, 0
+            )
             curTime += motionTime
             table.addAction(curTime, self.zPositioner, 0)
             # Hold flat for the stabilization time, and any time needed for
@@ -94,18 +94,20 @@ class OpenShutterSweepExperiment(experiment.Experiment):
             if self.numReps > 1:
                 for cameras, lightTimePairs in self.exposureSettings:
                     for camera in cameras:
-                        cameraReadyTime = max(cameraReadyTime,
-                                self.getTimeWhenCameraCanExpose(table, camera))
+                        cameraReadyTime = max(
+                            cameraReadyTime,
+                            self.getTimeWhenCameraCanExpose(table, camera),
+                        )
                 table.addAction(
-                        max(curTime + stabilizationTime, cameraReadyTime),
-                        self.zPositioner, 0)
+                    max(curTime + stabilizationTime, cameraReadyTime),
+                    self.zPositioner,
+                    0,
+                )
 
         return table
 
-
     def expose(self, curTime, cameras, lightTimePairs, table):
         return curTime
-
 
 
 ## A consistent name to use to refer to the class itself.

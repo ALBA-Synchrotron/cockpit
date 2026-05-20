@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -54,11 +54,11 @@ class TestCockpitEvents(WxTestCase):
         self.mock_function = unittest.mock.Mock()
 
     def create_and_bind(self, window):
-        emitter = cockpit.gui.EvtEmitter(window, 'test gui')
+        emitter = cockpit.gui.EvtEmitter(window, "test gui")
         emitter.Bind(cockpit.gui.EVT_COCKPIT, self.mock_function)
 
     def trigger_event(self):
-        cockpit.events.publish('test gui')
+        cockpit.events.publish("test gui")
         self.app.ProcessPendingEvents()
 
     def test_bind(self):
@@ -74,5 +74,5 @@ class TestCockpitEvents(WxTestCase):
         self.mock_function.assert_not_called()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

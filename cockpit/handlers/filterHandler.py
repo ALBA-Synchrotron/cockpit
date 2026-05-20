@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -18,11 +18,13 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Cockpit.  If not, see <http://www.gnu.org/licenses/>.
 
-from cockpit.handlers import deviceHandler
-from cockpit import depot
-import cockpit.gui
 import wx
+
+import cockpit.gui
 import cockpit.util.threads
+from cockpit import depot
+from cockpit.handlers import deviceHandler
+
 
 class Filter:
     """An individual filter."""
@@ -47,45 +49,68 @@ class Filter:
             else:
                 self.value = None
 
-            
     def __repr__(self):
         if self.value:
-            return '%d: %s, %s' % (self.position, self.label, self.value)
+            return "%d: %s, %s" % (self.position, self.label, self.value)
         else:
-            return '%d: %s' % (self.position, self.label)
+            return "%d: %s" % (self.position, self.label)
 
 
 class FilterHandler(deviceHandler.DeviceHandler):
     """A handler for emission and ND filter wheels."""
-    def __init__(self, name, groupName, isEligibleForExperiments, callbacks, cameras, lights):
-        super().__init__(name, groupName, isEligibleForExperiments, callbacks,
-                         depot.LIGHT_FILTER)
+
+    def __init__(
+        self,
+        name,
+        groupName,
+        isEligibleForExperiments,
+        callbacks,
+        cameras,
+        lights,
+    ):
+        super().__init__(
+            name,
+            groupName,
+            isEligibleForExperiments,
+            callbacks,
+            depot.LIGHT_FILTER,
+        )
         self.cameras = cameras or []
         self.lights = lights or []
         self.lastFilter = None
 
     @property
     def filters(self):
-        return self.callbacks['getFilters']()
+        return self.callbacks["getFilters"]()
 
     def onSaveSettings(self):
-        return self.callbacks['getPosition']()
+        return self.callbacks["getPosition"]()
 
     def onLoadSettings(self, settings):
-        filters = self.callbacks['getFilters']()
+        filters = self.callbacks["getFilters"]()
         for f in filters:
             if f.position == settings:
                 self.setFilter(f)
 
     ### UI functions ####
     def makeSelector(self, parent):
-        ctrl = wx.Choice(parent)
-        ctrl.Set(list(map(str, self.filters)))
-        ctrl.Bind(wx.EVT_CHOICE, lambda evt: self.setFilter(self.filters[evt.Selection]))
-        self.addWatch('lastFilter', lambda f: ctrl.SetSelection(ctrl.FindString(str(f))))
-        ctrl.SetSelection(ctrl.FindString(str(self.lastFilter)))
-        return ctrl
+        self.ctrl = wx.Choice(parent)
+        self.ctrl.Set(list(map(str, self.filters)))
+        self.ctrl.Bind(
+            wx.EVT_CHOICE,
+            lambda evt: self.setFilter(self.filters[evt.Selection]),
+        )
+        self.addWatch("lastFilter", self.setFromName)
+        self.ctrl.Bind(wx.EVT_WINDOW_DESTROY, self.OnSelectorDestroy)
+        self.ctrl.SetSelection(self.ctrl.FindString(str(self.lastFilter)))
+        return self.ctrl
 
+    def setFromName(self, name):
+        self.ctrl.SetSelection(self.ctrl.FindString(str(name)))
+
+    def OnSelectorDestroy(self, event: wx.WindowDestroyEvent) -> None:
+        self.removeWatch("lastFilter", self.setFromName)
+        event.Skip()
 
     def makeUI(self, parent):
         panel = wx.Panel(parent)
@@ -94,14 +119,14 @@ class FilterHandler(deviceHandler.DeviceHandler):
         panel.Sizer.Add(self.makeSelector(panel), flag=wx.EXPAND)
         return panel
 
-
     def setFilter(self, filter):
-        self.callbacks['setPosition'](filter.position, callback=self.updateAfterMove)
-
+        self.callbacks["setPosition"](
+            filter.position, callback=self.updateAfterMove
+        )
 
     def currentFilter(self):
-        position = self.callbacks['getPosition']()
-        filters = self.callbacks['getFilters']()
+        position = self.callbacks["getPosition"]()
+        filters = self.callbacks["getFilters"]()
         for f in filters:
             if f.position == position:
                 return f
@@ -119,7 +144,6 @@ class FilterHandler(deviceHandler.DeviceHandler):
         # Excitation filters
         for h in self.lights:
             pass
-
 
     def finalizeInitialization(self):
         self.updateAfterMove()

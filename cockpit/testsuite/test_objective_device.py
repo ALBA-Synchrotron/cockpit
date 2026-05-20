@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2020 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -18,8 +18,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Cockpit.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 import typing
+import unittest
 
 import cockpit.devices.objective
 

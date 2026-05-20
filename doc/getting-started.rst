@@ -11,21 +11,21 @@ Getting Started
 ###############
 
 If Cockpit is being installed for the first time and in the absence of
-any configuration files, Cockpit will simulate a series of devices.
-While this is useful for testing, the goal of Cockpit is to control a
-real microscope.  Configuring Cockpit to connect and control your own
+any configuration files, Cockpit simulates a series of devices.  While
+this is useful for testing, the goal of Cockpit is to control a real
+microscope.  Configuring Cockpit to connect and control your own
 devices requires two things:
 
-1. setup a Python-Microscope `device-server
-  <https://www.python-microscope.org/doc/architecture/device-server.html>`_
-  for each of devices to be used.
+1. Setup a Python-Microscope `device-server
+   <https://www.python-microscope.org/doc/architecture/device-server.html>`__
+   for each of devices to be used.
 
 2. Configure :ref:`Cockpit's depot <depot-config>` to use those
-  devices.
+   devices.
 
 Configuration of the device servers is outside the scope of this
 documentation, refer to Microscope's `documentation
-<https://www.python-microscope.org/doc/architecture/device-server.html>`_.
+<https://www.python-microscope.org/doc/architecture/device-server.html>`__.
 This document is about configuring Cockpit proper.
 
 Configuring Cockpit for the first time
@@ -45,7 +45,29 @@ The format of this file is defined in the :ref:`Depot configuration
 else's file as a starting point.  Some example configuration files can
 be found `here <https://github.com/MicronOxford/configs>`__.
 
+An alternative approach is to start with no configuration file which
+will run cockpit with a predefined set of simulated devices. You can
+then start adding devices to the depot config file one at a
+time. Restart cockpit to test each device to ensure it is working. As real
+devices are added the simulated device will be deactivated. 
+testing each as it is 
+
 Once the file is created, verify that the depot file is working
 correctly, and devices are connected with::
 
-  python -m cockpit.status
+    python3 -m cockpit.status
+
+Critical Components
+===================
+
+Cockpit was developed for performing experiments with highly
+dependable timing. For this reason the experiment module is designed
+around having an external hardware timing device, referenced in the
+code as the ``executor``. This device accepts a table of timings for
+the experiment and then is able to generate digital triggers and
+optionally analog voltage signals at specified timings. There are two
+currently supported options, a Red Pitaya single board computer, or a
+National Instruments cRO FPGA card.
+
+Additionally Cockpit requires a motorized stage, at least one camera,
+at least one light source and at least one objective.

@@ -14,17 +14,17 @@ Configuration
 
 .. note::
 
-    Cockpit uses `Microscope <https://python-microscope.org/>`_ to
+    Cockpit uses `Microscope <https://python-microscope.org/>`__ to
     handle the hardware level device communication.  This page is
     concerned with the configuration of Cockpit and assumes you
     already have working Microscope device servers.  For more
     information on setting up device servers see `its documentation
     <https://python-microscope.org/doc/architecture/device-server.html>`__.
 
-There are two parts to configuring cockpit.  The :ref:`configuration
-of cockpit proper <cockpit-config>` that covers most of cockpit
+There are two parts to configuring Cockpit.  The :ref:`configuration
+of Cockpit proper <cockpit-config>` that covers most of Cockpit
 options, and the :ref:`depot configuration <depot-config>` which lists
-all devices that cockpit will have control over.
+all devices that Cockpit will have control over.
 
 
 .. _cockpit-config:
@@ -72,7 +72,13 @@ config-dir
   the last used settings.
 
 data-dir
-  Directory for the default location to save image data.
+
+  Directory for the default location to save image data.  This value
+  will expand environment variables and an initial tilde (`~`).  The
+  default value is `~/MUI_DATA`, i.e., on the user's home directory.
+  If you have a setup where each user has its own data directory on a
+  separate filesystem, you can use something like
+  `D:\cockpit-data\${USERNAME}` or `/srv/cockpit-data/${USER}`.
 
 depot-files
   List of files to use for the device depot.  See :ref:`depot-config`.
@@ -104,11 +110,18 @@ primitives
 
   .. code:: ini
 
-      primitives: c 1000 1000 100
+     primitives: c 1000 1000 100
                   r 1000 1000 100 100
 
   where ``c x0 y0 radius`` defines a circle centred on ``x0, y0`` and
   ``r x0 y0 width height`` defines a rectangle centred on ``x0, y0``.
+
+min-delta-to-display
+
+  The macro stage window displays arrows when a stage is moving.  For
+  stages operating in closed-loop mode which are constantly correcting
+  their position this can be distracting.  This value sets the min
+  change of position to be displayed as movement.  Defaults to 0.01.
 
 
 .. TODO:: These options for the stage section are historical and a
@@ -130,6 +143,16 @@ loadPosition
 unloadPosition
   Unload position used in the touchscreen.
 
+
+joystick section
+````````````````
+speed
+  A float scale factor used to mutiply the joystick output to produce
+  stage movement.  Smaller numbers make the stage control with
+  joystick slower, while larger numbers make it faster.  Default is
+  0.01
+
+
 Command line options
 --------------------
 
@@ -139,7 +162,7 @@ options in the configuration files.  The following command line
 options are available:
 
 ``--config-file COCKPIT-CONFIG-PATH``
-  File path for another cockpit config file.  This option can be
+  File path for another Cockpit config file.  This option can be
   specified multiple times.  Options defined in later files override
   options in previous ones.
 
@@ -149,10 +172,10 @@ options are available:
   and ``--no-user-config-files`` options.
 
 ``--no-system-config-files``
-  Skip all system-wide configuration files, both cockpit and depot.
+  Skip all system-wide configuration files, both Cockpit and depot.
 
 ``--no-user-config-files``
-  Skip the user configuration file, both cockpit and depot.
+  Skip the user configuration file, both Cockpit and depot.
 
 ``--depot-file DEPOT-CONFIG-PATH``
   Filepath for the depot device configuration.  This option can be
@@ -176,7 +199,7 @@ precedence order in such case is:
 2. config file set via command line
 3. user config file
 4. system-wide config files
-5. cockpit fallback values
+5. Cockpit fallback values
 
 This enables users to have a configuration file that overrides
 system-wide settings, or to use command line options for one-off
@@ -188,7 +211,7 @@ change of settings.
 Depot Configuration
 ===================
 
-Depot is the collection of devices available to the cockpit program.
+Depot is the collection of devices available to the Cockpit program.
 Each section of a depot configuration specifies a single device: the
 section name being the device name, while the options are the device
 configuration.  For example:
@@ -225,8 +248,8 @@ and objectives.
 Multiple depot configurations
 -----------------------------
 
-Like the cockpit configuration, depot configuration may span multiple
-files.  Unlike the cockpit configuration where sections with the same
+Like the Cockpit configuration, depot configuration may span multiple
+files.  Unlike the Cockpit configuration where sections with the same
 name are merged, each device section must be unique and sections with
 the same name will cause an error even if in different files.
 
@@ -235,7 +258,7 @@ a set of files is present, the others are not processed.  The order is
 as follow:
 
 1. depot files in command line options.
-2. depot files in cockpit config files.  If multiple cockpit config
+2. depot files in Cockpit config files.  If multiple Cockpit config
    files define depot files, the list of files is read is the one in
    the file with :ref:`highest precedence
    <cockpit-config-precedence>`.
@@ -248,9 +271,10 @@ as follow:
 Preferences
 ===========
 
-In addition to the configuration, Cockpit also keeps a cache of user
-preferences such as the layout of the different windows, and the last
-used experiment and device settings.  These can be cleared via "Reset
+In addition to the configuration, Cockpit keeps user preferences, such
+as the layout of the different windows, and the last used experiment
+and device settings, saved to file.  This ensures that current state
+is restored after restarting Cockpit.  These can be cleared via "Reset
 User Configuration" on the "Edit" menu.
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2021 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -22,8 +22,9 @@ import sys
 
 import cockpit
 
+
 # Because "cockpit" is a package and not a module, this module named
 # "__main__" is required so that "python -m cockpit" works.
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(cockpit.main(sys.argv))

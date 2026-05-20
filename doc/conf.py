@@ -8,15 +8,23 @@
 ## notice and this notice are preserved.  This file is offered as-is,
 ## without any warranty.
 
+import os.path
+import sys
+
+
+# We need this so that autodoc can find Cockpit docstrings.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.path.pardir))
+
 project = "Microscope-Cockpit"
 author = ""
 copyright = "CC BY-SA"
-version = "2.9.1+dev"
+version = "2.9.2+dev"
 release = version
 
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
@@ -32,8 +40,19 @@ todo_include_todos = True
 
 # Configuration for sphinx.ext.napoleon
 napoleon_google_docstring = True
-napoleon_include_private_with_doc = True
-napoleon_include_special_with_doc = True
+napoleon_numpy_docstring = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+
+# Configuration for sphinx.ext.intersphinx
+intersphinx_mapping = {
+    "microscope": ("https://python-microscope.org/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pyro4": ("https://pyro4.readthedocs.io/en/stable/", None),
+    "pyserial": ("https://pyserial.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3", None),
+    "wx": ("https://docs.wxpython.org/", None),
+}
 
 
 #
@@ -48,7 +67,7 @@ html_theme_options = {
     ),
     "github_button": True,
     "github_repo": "cockpit",
-    "github_user": "MicronOxford",
+    "github_user": "microscope-cockpit",
     "show_related": False,
     "sidebar_collapse": False,
     "show_powered_by": False,

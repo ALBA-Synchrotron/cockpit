@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2018 Mick Phillips <mick.phillips@gmail.com>
-## Copyright (C) 2020 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -19,8 +18,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Cockpit.  If not, see <http://www.gnu.org/licenses/>.
 
-import typing
 import time
+import typing
 
 import cockpit.depot
 import cockpit.devices.device
@@ -37,31 +36,40 @@ class SimpleLight(cockpit.devices.device.Device):
     .. code:: ini
 
         [led source]
-        type: cockpip.devices.light.SimpleLight
+        type: cockpit.devices.light.SimpleLight
         triggerSource: NAME_OF_EXECUTOR_DEVICE
         triggerLine: 1
 
     """
+
     def getHandlers(self):
         self.handlers = []
-        trigsource = self.config.get('triggersource', None)
-        trigline = self.config.get('triggerline', None)
+        trigsource = self.config.get("triggersource", None)
+        trigline = self.config.get("triggerline", None)
         if trigsource:
-            trighandler = cockpit.depot.getHandler(trigsource,
-                                                   cockpit.depot.EXECUTOR)
+            trighandler = cockpit.depot.getHandler(
+                trigsource, cockpit.depot.EXECUTOR
+            )
         else:
             trighandler = None
         self._exposureTime = 100
-        self.handlers.append(LightHandler(
-            self.name,
-            self.name + ' light source',
-            {'setEnabled': lambda name, on: time.sleep(0.5),
-             'setExposureTime': lambda name, value: setattr(self, '_exposureTime', value),
-             'getExposureTime': lambda name: self._exposureTime},
-            self.config.get('wavelength', None),
-            100,
-            trighandler,
-            trigline))
+        self.handlers.append(
+            LightHandler(
+                self.name,
+                self.name + " light source",
+                {
+                    "setEnabled": lambda name, on: time.sleep(0.5),
+                    "setExposureTime": lambda name, value: setattr(
+                        self, "_exposureTime", value
+                    ),
+                    "getExposureTime": lambda name: self._exposureTime,
+                },
+                self.config.get("wavelength", None),
+                100,
+                trighandler,
+                trigline,
+            )
+        )
 
         return self.handlers
 
@@ -75,25 +83,33 @@ class AmbientLight(cockpit.devices.device.Device):
     with no active illumination.
 
     """
+
     def __init__(self, name: str, config: typing.Mapping[str, str]) -> None:
         super().__init__(name, config)
-        self._state = {'time': 100.0}
+        self._state = {"time": 100.0}
         callbacks = {
-            'getExposureTime': self._getExposureTime,
-            'setExposureTime': self._setExposureTime,
-            'setEnabled': self._setEnabled,
-        } # type: typing.Dict[str, typing.Callable]
-        self._handlers = [LightHandler('Ambient', 'ambient', callbacks,
-                                       wavelength=0, exposureTime=100.0)]
+            "getExposureTime": self._getExposureTime,
+            "setExposureTime": self._setExposureTime,
+            "setEnabled": self._setEnabled,
+        }  # type: typing.Dict[str, typing.Callable]
+        self._handlers = [
+            LightHandler(
+                "Ambient",
+                "ambient",
+                callbacks,
+                wavelength=0,
+                exposureTime=100.0,
+            )
+        ]
 
     def getHandlers(self) -> typing.List[LightHandler]:
         return self._handlers
 
     def _getExposureTime(self, name: str) -> float:
-        return self._state['time']
+        return self._state["time"]
 
     def _setExposureTime(self, name: str, value: float) -> None:
-        self._state['time'] = value
+        self._state["time"] = value
 
     def _setEnabled(self, name: str, state: bool) -> None:
         # The ambient light source is always on, so we do nothing.  It

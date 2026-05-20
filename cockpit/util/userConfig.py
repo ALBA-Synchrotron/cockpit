@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## Copyright (C) 2019 David Miguel Susano Pinto <david.pinto@bioch.ox.ac.uk>
+## Copyright (C) 2021 University of Oxford
 ##
 ## This file is part of Cockpit.
 ##
@@ -18,11 +18,14 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Cockpit.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import os.path
 import pprint
 
-from cockpit.util import logger
+
+_logger = logging.getLogger(__name__)
+
 
 ## @package userConfig
 # This module handles loading and saving changes to user configuration, which
@@ -31,20 +34,21 @@ from cockpit.util import logger
 
 ## In-memory version of the config; program singleton.
 _config = {}
-_config_path = ''
+_config_path = ""
 
 
 ## Open the config file and unserialize its contents.
 def _loadConfig(fpath):
     config = {}
     try:
-        with open(fpath, 'r') as fh:
+        with open(fpath, "r") as fh:
             config = eval(fh.read())
     except FileNotFoundError:
         config = {}
     except SyntaxError as e:
-        logger.log.error("invalid or corrupted user config file '%s': %s",
-                         fpath, str(e))
+        _logger.error(
+            "invalid or corrupted user config file '%s': %s", fpath, str(e)
+        )
     return config
 
 
@@ -55,13 +59,13 @@ def _writeConfig(config, fpath):
     ## their contents are readable.
     printer = pprint.PrettyPrinter()
     if not printer.isreadable(config):
-        raise RuntimeError('user config file has non-writable data')
+        raise RuntimeError("user config file has non-writable data")
 
     dirname = os.path.dirname(fpath)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    with open(fpath, 'w') as fh:
+    with open(fpath, "w") as fh:
         fh.write(printer.pformat(config))
 
 
@@ -88,6 +92,7 @@ def getValue(key, default=None):
         result = default
     return result
 
+
 ## Set the entry referenced by key to the given value. Users are set as
 # in getValue.
 def setValue(key, value):
@@ -100,6 +105,7 @@ def setValue(key, value):
 def initialize(cockpit_config):
     global _config
     global _config_path
-    _config_path = os.path.join(cockpit_config['global'].get('config-dir'),
-                                'config.py')
+    _config_path = os.path.join(
+        cockpit_config["global"].get("config-dir"), "config.py"
+    )
     _config = _loadConfig(_config_path)
