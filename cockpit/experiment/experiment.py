@@ -58,7 +58,6 @@ from cockpit.gui import guiUtils
 
 import cockpit.handlers.camera
 import cockpit.interfaces.stageMover
-import cockpit.util.logger
 
 from functools import partial
 import decimal

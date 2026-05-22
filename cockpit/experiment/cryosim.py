@@ -4,7 +4,6 @@ import numpy as np
 from cockpit.experiment import experiment, actionTable
 from cockpit.gui import guiUtils
 import cockpit.util.userConfig
-import cockpit.util.logger
 from cockpit import depot
 import decimal
 

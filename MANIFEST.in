@@ -19,3 +19,4 @@ include INSTALL.rst
 graft doc
 graft images
 graft tools
+graft cockpit/resources

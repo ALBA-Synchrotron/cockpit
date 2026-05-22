@@ -428,6 +428,7 @@ class AnalogMixin:
 
     def setAnalogLine(self, line, level):
         ## Set analog output of line to level.
+        print("setanalogline", line, level)
         self.callbacks["setAnalog"](line, level)
 
     def getAnalogLine(self, line):

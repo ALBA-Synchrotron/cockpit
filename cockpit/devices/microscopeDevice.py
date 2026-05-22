@@ -70,7 +70,6 @@ import cockpit.handlers.executor
 import cockpit.util.colors
 import cockpit.util.listener
 import cockpit.util.threads
-from cockpit.util.logger import log
 import cockpit.util.userConfig
 from cockpit import depot, events
 from cockpit.devices import device
@@ -107,10 +106,12 @@ class MicroscopeBase(device.Device):
         self.set_setting = None
         self.describe_setting = None
         self.describe_settings = None
+        self.logger = valueLogger.ValueLogger(
+            name, keys=None)
 
     def initialize(self):
         super().initialize()
-        log.debug("%s -> initialize" % self.name)
+        self.logger.log("%s -> initialize" % self.name)
         # Connect to the proxy.
         if "controller" not in self.config:
             self._proxy = Pyro4.Proxy(self.uri)
@@ -215,7 +216,7 @@ class MicroscopeBase(device.Device):
         return [result]
 
     def showSettings(self, evt):
-        log.debug("%s -> showSettings" % self.name)
+        self.logger.log("%s -> showSettings" % self.name)
         if not self.settings_editor:
             # TODO - there's a problem with abstraction here. The settings
             # editor needs the describe/get/set settings functions from the
@@ -746,6 +747,7 @@ class MicroscopeModulator(MicroscopeBase):
                 time.sleep(wait)
             t, state = action
             dstate, astate = state
+            print(f"{astate[0]}, {type(astate[0])}")
             self.position = astate[0]
 
         events.publish(events.EXPERIMENT_EXECUTION)
@@ -796,6 +798,7 @@ class MicroscopeModulator(MicroscopeBase):
         sizer.Add(adv_button)
         self.panel.SetSizerAndFit(sizer)
         return self.panel
+
 class MicroscopeDIO(MicroscopeBase):
     """Device class for asynchronous Digital Inout and Output signals.
     This class enables the configuration of named buttons in main GUI window
